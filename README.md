@@ -1,4 +1,5 @@
 # HVCI-loldrivers-check
+Checks to see which drivers from loldrivers.io are not blocked by a certain HVCI blocklist.
 
 ### Requirements
 * Powershell 6.0+

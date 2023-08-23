@@ -14,6 +14,9 @@ Checks to see which drivers from loldrivers.io are not blocked by the current HV
 
 ### Output
 ```
+Number of blocked drivers: <number>
+Number of allowed drivers: <number>
+
 Allowed:
 MD5: <hash> SHA1: <hash> SHA256: <hash>
 MD5: <hash> SHA1: <hash> SHA256: <hash>

@@ -21,7 +21,6 @@ Note: drivers which are allowed by the HVCI block list might still not load
 .OUTPUTS
 
 Outputs a list of drivers not blocked by the HVCI policy.
-Potentially outputs a (short) list of drivers which may be allowed (see readme for details).
 #>
 
 $loldrivers = Invoke-WebRequest -Uri https://www.loldrivers.io/api/drivers.json | ConvertFrom-Json -AsHashTable
@@ -40,7 +39,6 @@ Remove-Item -Path $cipolicypath
 $file_rules = $policy.SiPolicy.FileRules
 $signers = $policy.SiPolicy.Signers.Signer
 $allowed = New-Object System.Collections.Generic.HashSet[string]
-$maybe_allowed = New-Object System.Collections.Generic.HashSet[string]
 $not_allowed = New-Object System.Collections.Generic.HashSet[string]
 
 function hasBlockedHash($driver){
@@ -66,16 +64,11 @@ function hasBlockedSigner($driver){
         $tbs = $signer.CertRoot.Value.ToLower()
         if(($driver.Signatures.Certificates.TBS.MD5 -contains $tbs) -or
            ($driver.Signatures.Certificates.TBS.SHA1 -contains $tbs) -or 
-           ($driver.Signatures.Certificates.TBS.SHA256 -contains $tbs)){
+           ($driver.Signatures.Certificates.TBS.SHA256 -contains $tbs) -or 
+           ($driver.Signatures.Certificates.TBS.SHA384 -contains $tbs)){
             $blocked_files = $signer.FileAttribRef
             if(!$blocked_files -or ($blocked_files.RuleID -contains $file_attrib.ID)){
                 return $true
-            }
-        }
-        if ($tbs.Length -eq 96){
-            # This entry has a SHA384 TBS so we can't know for sure if this driver matches
-            if (($file_attrib) -and ($blocked_files.RuleID -contains $file_attrib.ID)){
-                $maybe_allowed.Add(("MD5:{0} SHA1:{1} SHA256:{2}" -f $driver.MD5, $driver.SHA1, $driver.SHA256))
             }
         }
     }
@@ -107,7 +100,3 @@ Write-Output ("Number of blocked drivers: {0}" -f $not_allowed.Count)
 Write-Output ("Number of allowed drivers: {0}`n" -f $allowed.Count)
 Write-Output "Allowed drivers:"
 $allowed | ForEach-Object {Write-Output "$_"}
-if ($maybe_allowed.Count -ne 0){
-    Write-Output "`nMaybe allowed:"
-    $maybe_allowed | ForEach-Object {Write-Output "$_"}
-}
